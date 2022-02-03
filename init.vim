@@ -80,10 +80,6 @@ let g:lightline = {
     \   'myline': 'LightlineLine',
     \ }
     \ }
-"\ 'separator': { 'left': '▓▒░', 'right': '░▒▓' },
-"\             [ 'lineinfo' ],
-"\             [ 'percent' ],
-"\             [ 'filetype' ]
 
 function! LightlineFilename()
   let fname = expand('%:f')
@@ -144,8 +140,6 @@ set smartindent
 
 colorscheme naysayer88
 set guifont=Consolas:h10
-" hi link javaIdentifier NONE
-" hi link javaDebug Conditional
 
 " wrap
 set whichwrap+=<,>,h,l,[,]
@@ -184,6 +178,8 @@ nnoremap <silent> <M-<> :cprevious<CR>
 nnoremap <silent> <M->> :cnext<CR>
 
 " -------- MAPPINGS
+
+"  exit terminal
 tnoremap <S-Escape> <C-\><C-N>
 
 " NAVIGATION
@@ -193,20 +189,17 @@ noremap ^ 0
 " WARNING: i don't use text object motions(?)
 noremap ) 0
 
-" ctrl u and d are too hard to follow
-" because it changes your view
+" ctrl u and d are too hard to follow because it changes your view
+" { and } don't jump consistently so it might cause confusion
+" 10 is just a random number
 nnoremap K 10k
-vnoremap K 10k
 nnoremap J 10j
+vnoremap K 10k
 vnoremap J 10j
-" nnoremap K {
-" vnoremap K {
-" nnoremap J }
-" vnoremap J }
 
 nnoremap <M-k> <C-u>
-vnoremap <M-k> <C-u>
 nnoremap <M-j> <C-d>
+vnoremap <M-k> <C-u>
 vnoremap <M-j> <C-d>
 
 " movement
@@ -223,15 +216,7 @@ vnoremap <M-l> W
 inoremap <M-h> <C-Left>
 inoremap <M-l> <C-Right>
 
-" quick window switch
-" nunmap w
-" nunmap W
-" nunmap b
-" nunmap B
-" nunmap e
-" nunmap S
-" nunmap U
-
+" quick markings
 function! MarkCount(count)
     execute ":normal! m" . a:count
     echo 'mark ' . a:count . ' set on line ' . line('.')
@@ -241,6 +226,8 @@ nnoremap <silent> <Space>   :<C-u>call MarkCount(v:count)<CR>
 nnoremap <silent> <S-Space> :<C-u>execute ":normal! '" . v:count<CR>
 nnoremap M '
 
+" quick window switch
+" do we need W?
 nnoremap w <C-W>w
 nnoremap W <C-W>W
 nnoremap <M-w> <C-W>w
@@ -286,8 +273,6 @@ vnoremap <Space> =
 vnoremap > >gv
 vnoremap < <gv
 
-" nmap <M-c> gcc
-" vmap <M-c> gc
 nmap U gcc
 vmap U gc
 
@@ -307,16 +292,10 @@ inoremap <C-S> <Esc>:update<CR>gi
 vmap <silent> <M-y> "+y:echom "copied"<CR>
 nmap <silent> <M-p> "+p:echom "pasted"<CR>
 nmap <silent> <M-P> "+P:echom "pasted"<CR>
-" vnoremap <silent> \y 
-" nnoremap <silent> \p 
-" nnoremap <silent> \P 
 
 " replace
 nnoremap <M-r> :%s/
 vnoremap <M-r> :s/
-" nnoremap \R :s
-" nmap <M-r> \r
-" vmap <M-r> \r
 
 nnoremap <M-f> %
 " nmap <M-f> *
@@ -334,19 +313,13 @@ nnoremap Y y$
 " Broken keyboard maps D:
 nmap <silent> <M-v> <C-V>
 
-" nmap <silent> <M-s> <C-S>
-" vmap <silent> <M-s> <C-S>
-" imap <silent> <M-s> <C-S>
-
+" we probably don't need <C-S> anymore, just use S
 nmap <silent> S <C-S>
 
+" vim completes me is kind of annoying sometimes
+" (require me to tap space twice), find fix or just use this
 " imap <silent> <M-n> <C-N>
 " imap <silent> <M-p> <C-P>
-
-" nmap <M-u> <C-U>
-" nmap <M-d> <C-D>
-" vmap <M-u> <C-U>
-" vmap <M-d> <C-D>
 
 imap <M-q> =
 imap <M-p> +
@@ -406,13 +379,13 @@ inoremap <silent> <C-F> <C-X><C-F>
 
 " SENT'S INIT.VIM MANIFESTO
 " 
-" 1. Screw the default vim keybindings. If you have a better keybinding,
-"    use it.
+" 1. Screw the default vim keybindings. It's decent,
+"    but if you have a better keybinding, use it.
 " 2. Screw the "vim purists". You shouldn't restrict yourself with not
 "    being able to move in Insert mode just because "it's not the vim way".
 "    Do things that make you the most comfortable.
 " 3. Utilize Alt key. I use GUI so it shouldn't be a problem.
-" 4. Make it as minimal as possible. Only put something you REALLY use.
+" 4. Make it as minimal as possible. Only put something you *really* use.
 " 
 " KEYBINDING REWORK
 " hjkl      - move
