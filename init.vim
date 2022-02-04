@@ -4,27 +4,21 @@
 " ### #  # ###  #
 "
 " Cheatsheet:
-" <F5> Undotree
+" <M-u> Undotree
 "
 " <C-P>: CtrlPMixed
 " <C-F>: Change modes
 "
-" gbb/gB: buffer
-" gbv:    vsplit buffer
-" gbt:    tabnew buffer
+" b/B: buffer
 " <C-W><S-T>: move current buffer to new tab
 "
-" gcc: comment line
-" gcgc: uncomment lines
-" 
-" [Visual] + <Right Mouse>: Find
-" [Visual] + <Middle Mouse>: Copy
+" U: toggle comment
 "
 " TODO:
 " . ctrlp is useless? i only need MRU?
-" . better broken keyboard imap
 " . subtler indent guide color
 " . fix double tab autocompletion
+" . fix naysayer88 tab color
 " 
 
 " -------- PLUGINS
@@ -53,59 +47,8 @@ Plug 'tpope/vim-repeat'
 " Plug 'weakish/rcshell.vim'
 call plug#end()
 
-" lightline
-" set noshowmode
-let g:lightline = {
-    \ 'colorscheme': 'wombat',
-    \ 'separator': { 'left': '▓▒░', 'right': '░▒▓' },
-    \ 'subseparator': { 'left': '', 'right': '' },
-    \ 'active': {
-    \   'left': [
-    \             [ 'filename', 'modified' ],
-    \             [ 'myline' ],
-    \             [ 'filetype', 'readonly' ]
-    \           ],
-    \  'right': [
-    \             [],
-    \             [],
-    \             []
-    \           ]
-    \ },
-    \ 'component': {
-    \ },
-    \ 'component_function': {
-    \   'filename': 'LightlineFilename',
-    \   'modified': 'LightlineModified',
-    \   'readonly': 'LightlineReadonly',
-    \   'myline': 'LightlineLine',
-    \ }
-    \ }
-
-function! LightlineFilename()
-  let fname = expand('%:f')
-  return fname ==# 'undotree_2' ? 'undotree' :
-       \ fname ==# 'diffpanel_3' ? 'diffpanel' :
-       \ fname !=# '' ? fname : '[no name]'
-endfunction
-
-function! LightlineModified()
-  return &ft =~# 'help' ? '' : &modified ? '[+] ' : &modifiable ? '' : '[-] '
-endfunction
-
-function! LightlineReadonly()
-  return &ft !~? 'help' && &readonly ? 'readonly' : ''
-endfunction
-
-function! LightlineLine()
-  return ' ln ' . line('.') . '.' . line('$')
-endfunction
-
-function! LightlineFiletype()
-  return &ft !=# '' ? &ft : 'no ft'
-endfunction
-
 " undotree
-nnoremap <silent> <F5> :UndotreeToggle<CR>
+nnoremap <silent> <M-u> :UndotreeToggle<CR>
 let g:undotree_SplitWidth = 33
 
 " ctrlp
@@ -115,18 +58,19 @@ let g:ctrlp_types = ['mru', 'mixed']
 let g:ctrlp_extensions = ['mixed']
 
 " indent guides
-let g:indent_guides_enable_on_vim_startup = 0
+let g:indent_guides_enable_on_vim_startup = 1
 let g:indent_guides_start_level = 2
 let g:indent_guides_guide_size  = 1
 let g:indent_guides_auto_colors = 0
-autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#293739
-autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#232526
+autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#182327
+"101a1a
+" 
+autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#042327
 
 " -------- CONFIGURATIONS
 set scrolloff=3
 set sidescrolloff=5
 
-set statusline=\ %-{LightlineFilename()}\ %-{LightlineModified()}\|%-{LightlineLine()}\ \|\ %-{LightlineFiletype()}\ %-{LightlineReadonly()}
 set autochdir
 
 set tabstop=4
@@ -138,10 +82,11 @@ set splitright
 set autoindent
 set smartindent
 
+set mouse=nv
+
 colorscheme naysayer88
 set guifont=Consolas:h10
 
-" wrap
 set whichwrap+=<,>,h,l,[,]
 
 set wildcharm=<C-Z>
@@ -157,8 +102,38 @@ filetype plugin indent on
 
 autocmd FileType c,cpp setlocal commentstring=//%s
 
-" COMPILING
+" ---- STATUSLINE
+function! StatuslineFilename()
+  let fname = expand('%:f')
+  return fname ==# 'undotree_2' ? 'undotree' :
+       \ fname ==# 'diffpanel_3' ? 'diffpanel' :
+       \ fname !=# '' ? fname : '[no name]'
+endfunction
 
+function! StatuslineModified()
+  return &ft =~# 'help' ? '' : &modified ? '[+] ' : &modifiable ? '' : '[-] '
+endfunction
+
+function! StatuslineReadonly()
+  return &ft !~? 'help' && &readonly ? 'readonly' : ''
+endfunction
+
+function! StatuslineLine()
+  return 'ln ' . line('.') . '.' . line('$')
+endfunction
+
+function! StatuslineFiletype()
+  return &ft !=# '' ? &ft : 'no ft'
+endfunction
+
+function! StatuslineQuickfixTitle()
+  return exists('w:quickfix_title') ? w:quickfix_title : '[no name] '
+endfunction
+
+set statusline=\ %-{StatuslineFilename()}\ %-{StatuslineModified()}\|\ %-{StatuslineLine()}\ \|\ %-{StatuslineFiletype()}\ %-{StatuslineReadonly()}
+autocmd FileType qf setlocal statusline=\ %-{StatuslineQuickfixTitle()}\|\ %-{StatuslineLine()}\ \|\ qf
+
+" ---- COMPILING
 nnoremap <M-m> :make<CR>
 autocmd FileType c,cpp setlocal makeprg=build
 autocmd FileType vim nnoremap <buffer> <M-m> :So<CR>
@@ -171,6 +146,7 @@ function! ToggleQuickFix()
     endif
 endfunction
 
+" errors
 nnoremap <silent> <M-n> :call ToggleQuickFix()<CR>
 nnoremap <silent> <M-,> :cbefore<CR>
 nnoremap <silent> <M-.> :cafter<CR>
@@ -179,10 +155,13 @@ nnoremap <silent> <M->> :cnext<CR>
 
 " -------- MAPPINGS
 
+" disable highlighting with escape
+nnoremap <silent> <ESC> :noh<CR><ESC>
+
 "  exit terminal
 tnoremap <S-Escape> <C-\><C-N>
 
-" NAVIGATION
+" ---- NAVIGATION
 " start of the line
 noremap 0 ^
 noremap ^ 0
@@ -233,36 +212,40 @@ nnoremap W <C-W>W
 nnoremap <M-w> <C-W>w
 
 " buffer
+" :vert/tab sb
 " TODO: better buffer????
-nnoremap gbb :call feedkeys(':b <Tab>', 't')<CR>
-nmap gB gbb
-nnoremap gbv :call feedkeys(':vert sb <Tab>', 't')<CR>
-nnoremap gbt :call feedkeys(':tab sb <Tab>', 't')<CR>
-nnoremap <M-W> <C-^>
 nnoremap b <C-^>
-nmap B gbb
+nnoremap B :b 
 
 " file
-" TODO: better file
-nnoremap \ee :call feedkeys(':e %:p:h<Tab>', 't')<CR>
-nmap <M-e> \ee
-nnoremap \ep :e D:\programming\
-nnoremap \ed :e C:\Users\user\Documents\
-nnoremap \ek :e D:\sch\KULIAH\
+" TODO: better file, make it like mark? E opens current dir,
+" 1E opens from a list
+nnoremap E1 :call feedkeys(':e %:p:h<Tab>', 't')<CR>
+nmap EE E1
+nnoremap E2 :e D:\programming\
+nnoremap E3 :e C:\Users\user\Documents\
+nnoremap E4 :e D:\sch\KULIAH\
 
-" EDITING
+" auto-complete filename
+inoremap <silent> <C-F> <C-X><C-F>
+
+nnoremap <M-f> %
+" nmap <M-f> *
+" nmap <M-F> #
+
+" ---- EDITING
 " ctrl+backspace
+" TODO: cnoremap <C-Del>
 inoremap <C-BS> <C-W>
 cnoremap <C-BS> <C-W>
 inoremap <C-Del> <C-o>dw
-" TODO: cnoremap <C-Del>
 " inoremap <C-Del> X<Esc>lbce
 
 " delete without cut
 nnoremap dD "_dd
 vnoremap D "_d
 
-" visual indentation
+" indentation
 nnoremap <Tab> >>
 nnoremap <S-Tab> <<
 vnoremap <Tab> >gv
@@ -273,12 +256,26 @@ vnoremap <Space> =
 vnoremap > >gv
 vnoremap < <gv
 
+" commenting
 nmap U gcc
 vmap U gc
 
-" COMMANDS
-command Init execute ':e C:\Users\user\AppData\Local\nvim\init.vim'
-command Source execute ':source $MYVIMRC'
+" replace
+nnoremap <M-r> :%s/
+vnoremap <M-r> :s/
+
+" i almost never use replace mode
+" so i use a more pleasant key for redo
+nnoremap R <C-r>
+nnoremap <C-r> R
+
+" D deletes to the end of line, C too
+" So Y should be the same imo
+nnoremap Y y$
+
+" ---- COMMANDS
+command! Init execute ':e C:\Users\user\AppData\Local\nvim\init.vim'
+command! Source execute ':source $MYVIMRC'
 command! BufOnly execute '%bdelete | edit # | normal `"'
 
 " ctrl+s saving
@@ -293,24 +290,14 @@ vmap <silent> <M-y> "+y:echom "copied"<CR>
 nmap <silent> <M-p> "+p:echom "pasted"<CR>
 nmap <silent> <M-P> "+P:echom "pasted"<CR>
 
-" replace
-nnoremap <M-r> :%s/
-vnoremap <M-r> :s/
+" Java
+autocmd BufNewFile *.java
+            \ exe "normal Ipublic clas \<BS>s " . expand('%:t:r') . " {\npublic static void main(String[] args) {\nW\<BS>\n}\n}\<Esc>3G$"
 
-nnoremap <M-f> %
-" nmap <M-f> *
-" nmap <M-F> #
+" C++
+nnoremap <silent> <M-b> :e %:p:s,.h$,.X123X,:s,.cpp$,.h,:s,.X123X$,.cpp,<CR>
 
-" I almost never use Replace Mode
-" So I use a more pleasant key for redo
-nnoremap R <C-r>
-nnoremap <C-r> R
-
-" D deletes to the end of line, C too
-" So Y should be the same imo
-nnoremap Y y$
-
-" Broken keyboard maps D:
+" ---- BROKEN KEYBOARD MAPS D:
 nmap <silent> <M-v> <C-V>
 
 " we probably don't need <C-S> anymore, just use S
@@ -321,59 +308,28 @@ nmap <silent> S <C-S>
 " imap <silent> <M-n> <C-N>
 " imap <silent> <M-p> <C-P>
 
+" + is used quite a lot, so use <M-p> instead of <M-Q>, same with _
 imap <M-q> =
 imap <M-p> +
 imap <M-m> -
-imap <M-M> _
+imap <M-u> _
 imap <M-f> 5
 imap <M-F> %
 imap <M-s> 6
 imap <M-S> ^
+imap <M-g> `
+imap <M-G> ~
 
 cmap <M-q> =
 cmap <M-p> +
 cmap <M-m> -
-cmap <M-M> _
+cmap <M-u> _
 cmap <M-f> 5
 cmap <M-F> %
 cmap <M-s> 6
 cmap <M-S> ^
-
-
-" Java
-autocmd BufNewFile *.java
-            \ exe "normal Ipublic clas \<BS>s " . expand('%:t:r') . " {\npublic static void main(String[] args) {\nW\<BS>\n}\n}\<Esc>3G$"
-
-" C++
-nnoremap <silent> <M-b> :e %:p:s,.h$,.X123X,:s,.cpp$,.h,:s,.X123X$,.cpp,<CR>
-
-" Acme-like Navigation
-" Set mouse to normal and visual
-set mouse=nv
-
-" Disable the default right mouse function of extending selection
-map <silent> <RightMouse> <Nop>
-map <silent> <2-RightMouse> <Nop>
-map <silent> <3-RightMouse> <Nop>
-map <silent> <4-RightMouse> <Nop>
-map <silent> <RightDrag> <Nop>
-map <silent> <RightRelease> <Nop>
-
-" Copy selection with middle mouse
-vnoremap <silent> <MiddleMouse> "+y:echom "copied"<CR>
-
-" Find word under the cursor then select it
-nnoremap <silent> <RightMouse><RightRelease> <LeftMouse>*gn
-
-" Find selection then select it
-vnoremap <silent> <RightRelease> y/\V<C-R>=escape(@",'/\')<CR><CR>gn
-
-" Disable highlighting with Escape
-nnoremap <silent> <ESC> :noh<CR><ESC>
-"nnoremap <silent> <ESC>^[ <ESC>^[
-
-" Auto-complete filename
-inoremap <silent> <C-F> <C-X><C-F>
+cmap <M-g> `
+cmap <M-G> ~
 
 
 
