@@ -1,8 +1,6 @@
 # dot
 just my dotfiles.
-
 this is mostly for windows.
-
 i put my explanations, notes, reasonings, and rants below.
 
 ## nvim
