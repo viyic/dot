@@ -10,5 +10,5 @@ set CINC=
 ::-I "..\include"
 
 :: pushd build
-cl %CFLAGS% %CINC% %CCPP% %CLIB% %LFLAGS
+cl %CFLAGS% %CINC% %CCPP% %CLIB% %LFLAGS%
 :: popd

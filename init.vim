@@ -32,7 +32,8 @@ Plug 'ap/vim-css-color'
 " Plug 'itchyny/lightline.vim'
 Plug 'mbbill/undotree'
 Plug 'ctrlpvim/ctrlp.vim'
-Plug 'ajh17/vimcompletesme'
+" Plug 'ajh17/vimcompletesme'
+Plug 'lifepillar/vim-mucomplete'
 
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'unblevable/quick-scope'
@@ -62,14 +63,17 @@ let g:indent_guides_enable_on_vim_startup = 1
 let g:indent_guides_start_level = 2
 let g:indent_guides_guide_size  = 1
 let g:indent_guides_auto_colors = 0
-autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#182327
-"101a1a
-" 
+autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#031f1f
+"#182327 #101a1a
 autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#042327
 
 " -------- CONFIGURATIONS
+set title
 set scrolloff=3
-set sidescrolloff=5
+
+set showbreak=↪\ 
+set breakindent
+set linebreak
 
 set autochdir
 
@@ -86,6 +90,7 @@ set mouse=nv
 
 colorscheme naysayer88
 set guifont=Consolas:h10
+hi QuickFixLine guibg=#031216
 
 set whichwrap+=<,>,h,l,[,]
 
@@ -168,11 +173,14 @@ noremap ^ 0
 " WARNING: i don't use text object motions(?)
 noremap ) 0
 
+nnoremap k gk
+nnoremap j gj
+
 " ctrl u and d are too hard to follow because it changes your view
 " { and } don't jump consistently so it might cause confusion
 " 10 is just a random number
-nnoremap K 10k
-nnoremap J 10j
+nnoremap K 10gk
+nnoremap J 10gj
 vnoremap K 10k
 vnoremap J 10j
 
@@ -205,9 +213,36 @@ nnoremap <silent> <Space>   :<C-u>call MarkCount(v:count)<CR>
 nnoremap <silent> <S-Space> :<C-u>execute ":normal! '" . v:count<CR>
 nnoremap M '
 
+" emacs-style go-to-line
+" i can't really do 'line'G because of my broken number keys
+" i think this is better 'line'G
+function! GoToLine()
+    call inputsave()
+    let line = input('go to line: ')
+    call inputrestore()
+    if !empty(line)
+        if line !~ '[^0-9]'
+            execute ":normal! " . line . "G"
+        else
+            redraw
+            echo "no non-digit characters!"
+        endif
+    endif
+endfunction
+
+nnoremap gl :call GoToLine()<CR>
+
 " quick window switch
 " do we need W?
-nnoremap w <C-W>w
+function! CycleWinSkipQF()
+    let start_win = winnr()
+    wincmd w
+    while &buftype ==# 'quickfix' && winnr() != start_win
+        wincmd w
+    endwhile
+endfunction
+
+nnoremap <silent> w :call CycleWinSkipQF()<CR>
 nnoremap W <C-W>W
 nnoremap <M-w> <C-W>w
 
@@ -232,6 +267,9 @@ inoremap <silent> <C-F> <C-X><C-F>
 nnoremap <M-f> %
 " nmap <M-f> *
 " nmap <M-F> #
+
+" find cpp function WIP
+" nnoremap <M-/> ^\(internal\|static\)*\s*\(\w\|\*\)\+\s\+\(\w\|\*\)\+(.*)\_s*{
 
 " ---- EDITING
 " ctrl+backspace
@@ -272,6 +310,87 @@ nnoremap <C-r> R
 " D deletes to the end of line, C too
 " So Y should be the same imo
 nnoremap Y y$
+
+" emacs-style replace
+" taken from https://stackoverflow.com/questions/7598133/how-to-search-and-replace-globally-starting-from-the-cursor-position-and-wrappi
+function! Replace()
+    call inputsave()
+    let find = input('find: ')
+    let replace = input('replace: ')
+    call inputrestore()
+    if getregtype('r') != ''
+        " save previous macro register
+        let l:register = getreg('r')
+    endif
+    normal! qr
+    redir => l:replacements
+    try
+        execute ',$s/' . find. '/' . replace . '/gce#'
+    catch /^Vim:Interrupt$/
+        return
+    finally
+        normal! q
+        let l:transcript = getreg('r')
+        if exists('l:register')
+            call setreg('r', l:register)
+        endif
+    endtry
+    redir END
+
+    if len(l:replacements) > 0
+        " at least one instance of pattern was found
+        let l:last = strpart(l:transcript, len(l:transcript) - 1)
+        if l:last ==# 'l' || l:last ==# 'q' || l:last ==# '^['
+            return
+        endif
+    endif
+
+    " loop around to top of file and continue
+    if line("''") > 1
+        1,''-&&"
+    endif
+endfunction
+
+function! s:ReplacePattern(patterns)
+    if getregtype('r') != ''
+        " save previous macro register
+        let l:register = getreg('r')
+    endif
+    normal! qr
+    redir => l:replacements
+    try
+        execute ',$s' . a:patterns . 'gce#'
+    catch /^Vim:Interrupt$/
+        return
+    finally
+        normal! q
+        let l:transcript = getreg('r')
+        if exists('l:register')
+            call setreg('r', l:register)
+        endif
+    endtry
+    redir END
+
+    if len(l:replacements) > 0
+        " at least one instance of pattern was found
+        let l:last = strpart(l:transcript, len(l:transcript) - 1)
+        if l:last ==# 'l' || l:last ==# 'q' || l:last ==# '^['
+            return
+        endif
+    endif
+
+    " loop around to top of file and continue
+    if line("''") > 1
+        1,''-&&"
+    endif
+endfunction
+
+nnoremap <Leader>r :call Replace()<CR>
+" command! -nargs=1 ReplacePattern call s:ReplacePattern(<q-args>)
+" nnoremap <Leader>r :ReplacePattern///<Left><Left>
+" command! -nargs=1 ReplacePattern call s:ReplacePattern(<q-args>)
+
+nnoremap gl :call GoToLine()<CR>
 
 " ---- COMMANDS
 command! Init execute ':e C:\Users\user\AppData\Local\nvim\init.vim'
