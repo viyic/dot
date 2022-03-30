@@ -6,21 +6,26 @@ i put my explanations, notes, reasonings, and rants below.
 ## key features
 features that i think are pretty good and worth checking out.
 * quick mark
-    <space> to place a mark, <shift-space> to go to mark. use numbers to make multiple marks (3<space>, 2<shift-space>). without a number, <space> and <shift-space> defaults to 0.
+
+    \<space\> to place a mark, \<shift-space\> to go to mark. use numbers to make multiple marks (3\<space\>, 2\<shift-space\>). without a number, \<space\> and \<shift-space\> defaults to 0.
 * emacs go-to-line
+
     takes number as input in commandline instead of vim's (number)G.
 * emacs find-and-replace
+
     starts at current line, and loops back to the beginning of the file. always ask for confirmation.
 * cycle windows without quickfix
 * minimal statusline
+
     i realized that i don't need a statusline plugin since my statusline is quite simple. i doubt you need many things in statusline anyway.
 * keymap reworks
+
     replacing ancient keybinds that are quite useless with things that i do quite often.
 
 ## nvim
 i try to make my init.vim minimal, in keymaps and plugins, and loads fast. if i can do it without plugins, then i should. if you want a fast nvim gui client for windows, use nvy.
 
-i wanted to use fuzzy finder, but for some reason i always need to tap <ESC> or <C-C> twice to close it. so i use ctrlp instead. i don't think it's that big of a deal. i'll find a replacement (or fix for fuzzy finder) when i need to.
+i wanted to use fuzzy finder, but for some reason i always need to tap \<ESC\> or \<C-C\> twice to close it. so i use ctrlp instead. i don't think it's that big of a deal. i'll find a replacement (or fix for fuzzy finder) when i need to.
 replaced vim-completes-me with vim-mucomplete.
 
 i used to use molokai for my colorscheme. it's a good colorscheme in my opinion. but for some reason, even after i highlight functions, delimiters, operators etc. i still find it hard to read sometimes. so i've been watching jon blow vods for a long while (years probably? idk), and even with minimal colorscheme, the code is fairly easy to read. idk how. or maybe it might just be placebo effect where i think i program better because i use the same config as the person whom i see as a better programmer. either way, whether it's placebo or not, it works, and honestly the colorscheme looks nice.
