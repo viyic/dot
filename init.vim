@@ -206,7 +206,7 @@ inoremap <M-l> <C-Right>
 " quick markings
 function! MarkCount(count)
     execute ":normal! m" . a:count
-    echo 'mark ' . a:count . ' set on line ' . line('.')
+    echom 'mark ' . a:count . ' set on line ' . line('.')
 endfunction
 
 nnoremap <silent> <Space>   :<C-u>call MarkCount(v:count)<CR>
@@ -225,7 +225,7 @@ function! GoToLine()
             execute ":normal! " . line . "G"
         else
             redraw
-            echo "no non-digit characters!"
+            echom "no non-digit characters!"
         endif
     endif
 endfunction
@@ -312,12 +312,13 @@ nnoremap <C-r> R
 nnoremap Y y$
 
 " emacs-style replace
-" taken from https://stackoverflow.com/questions/7598133/how-to-search-and-replace-globally-starting-from-the-cursor-position-and-wrappi
+" edited version of https://stackoverflow.com/questions/7598133/how-to-search-and-replace-globally-starting-from-the-cursor-position-and-wrappi
 function! Replace()
     call inputsave()
     let find = input('find: ')
     let replace = input('replace: ')
     call inputrestore()
+
     if getregtype('r') != ''
         " save previous macro register
         let l:register = getreg('r')
@@ -351,46 +352,7 @@ function! Replace()
     endif
 endfunction
 
-function! s:ReplacePattern(patterns)
-    if getregtype('r') != ''
-        " save previous macro register
-        let l:register = getreg('r')
-    endif
-    normal! qr
-    redir => l:replacements
-    try
-        execute ',$s' . a:patterns . 'gce#'
-    catch /^Vim:Interrupt$/
-        return
-    finally
-        normal! q
-        let l:transcript = getreg('r')
-        if exists('l:register')
-            call setreg('r', l:register)
-        endif
-    endtry
-    redir END
-
-    if len(l:replacements) > 0
-        " at least one instance of pattern was found
-        let l:last = strpart(l:transcript, len(l:transcript) - 1)
-        if l:last ==# 'l' || l:last ==# 'q' || l:last ==# '^['
-            return
-        endif
-    endif
-
-    " loop around to top of file and continue
-    if line("''") > 1
-        1,''-&&"
-    endif
-endfunction
-
 nnoremap <Leader>r :call Replace()<CR>
-" command! -nargs=1 ReplacePattern call s:ReplacePattern(<q-args>)
-" nnoremap <Leader>r :ReplacePattern///<Left><Left>
-" command! -nargs=1 ReplacePattern call s:ReplacePattern(<q-args>)
-
-nnoremap gl :call GoToLine()<CR>
 
 " ---- COMMANDS
 command! Init execute ':e C:\Users\user\AppData\Local\nvim\init.vim'
