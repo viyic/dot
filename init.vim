@@ -29,23 +29,24 @@ Plug 'uiiaoo/java-syntax.vim'
 Plug 'bfrg/vim-cpp-modern'
 Plug 'ap/vim-css-color'
 
-" Plug 'itchyny/lightline.vim'
 Plug 'mbbill/undotree'
-Plug 'ctrlpvim/ctrlp.vim'
-" Plug 'ajh17/vimcompletesme'
 Plug 'lifepillar/vim-mucomplete'
 
-Plug 'nathanaelkane/vim-indent-guides'
+" file nav
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'lambdalisue/fern.vim'
+
 Plug 'unblevable/quick-scope'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-repeat'
 
-" SLOW!
-" Plug 'valloric/matchtagalways'
-
-" Linux only
-" Plug 'weakish/rcshell.vim'
+" testing
+" for new plugins, to see whether i really need it or not
+Plug 'Vimjas/vim-python-pep8-indent'
+Plug 'hattya/vcvars.vim'
+Plug 'cohama/lexima.vim'
+Plug 'lukas-reineke/indent-blankline.nvim'
 call plug#end()
 
 " undotree
@@ -59,13 +60,28 @@ let g:ctrlp_types = ['mru', 'mixed']
 let g:ctrlp_extensions = ['mixed']
 
 " indent guides
-let g:indent_guides_enable_on_vim_startup = 1
-let g:indent_guides_start_level = 2
-let g:indent_guides_guide_size  = 1
-let g:indent_guides_auto_colors = 0
-autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#031f1f
-"#182327 #101a1a
-autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#042327
+"let g:indent_guides_enable_on_vim_startup = 1
+"let g:indent_guides_start_level = 2
+"let g:indent_guides_guide_size  = 1
+"let g:indent_guides_auto_colors = 0
+"autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#031f1f
+""#182327 #101a1a
+"autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#042327
+
+" lexima
+" let g:lexima_no_default_rules=1
+let g:lexima_enable_basic_rules=0
+let g:lexima_enable_newline_rules=0
+call lexima#add_rule({'char': '{', 'at': '^struct .*\%#', 'input_after': '};'})
+call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input_after': '<CR>'})
+call lexima#add_rule({'char': '<CR>', 'at': '{\%#$', 'input_after': '<CR>}', 'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s.+)\n)*\1\}'})
+
+" indent blankline
+set list
+let g:indent_blankline_show_first_indent_level = v:false
+let g:indent_blankline_max_indent_increase = 1
+let g:indent_blankline_show_trailing_blankline_indent = v:false
+autocmd VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
 
 " -------- CONFIGURATIONS
 set title
@@ -88,6 +104,8 @@ set smartindent
 
 set mouse=nv
 
+set cino=(0,l1,c0
+
 colorscheme naysayer88
 set guifont=Consolas:h10
 hi QuickFixLine guibg=#031216
@@ -105,6 +123,7 @@ set hidden
 
 filetype plugin indent on
 
+autocmd FileType c,cpp setlocal comments=://
 autocmd FileType c,cpp setlocal commentstring=//%s
 
 " ---- STATUSLINE
@@ -139,9 +158,34 @@ set statusline=\ %-{StatuslineFilename()}\ %-{StatuslineModified()}\|\ %-{Status
 autocmd FileType qf setlocal statusline=\ %-{StatuslineQuickfixTitle()}\|\ %-{StatuslineLine()}\ \|\ qf
 
 " ---- COMPILING
+let g:latest_cpp = '17.0' " '2022' vcvars#list()[-1]
+
+func! InitCPP()
+    let latest_cpp = vcvars#list()[-1]
+    let vars = call('vcvars#get', [latest_cpp])
+    if empty(vars)
+        echo 'InitCPP Error: vars is empty'
+        return
+    endif
+
+    let path = $PATH
+    let include = $INCLUDE
+    let lib = $LIB
+    let libpath = $LIBPATH
+    let sep = ';'
+    let $PATH    = join(vars.path + [path], sep)
+    let $INCLUDE = join(vars.include + [include], sep)
+    let $LIB     = join(vars.lib + [lib], sep)
+    let $LIBPATH = join(vars.libpath + [libpath], sep)
+endfunc
+command! Vcvars execute ':call InitCPP()'
+" autocmd VimEnter * call InitCPP()
+
 nnoremap <M-m> :make<CR>
 autocmd FileType c,cpp setlocal makeprg=build
-autocmd FileType vim nnoremap <buffer> <M-m> :So<CR>
+" autocmd FileType c,cpp nnoremap <buffer> <silent> <M-m> :call vcvars#call('make', g:latest_cpp)<CR>
+autocmd FileType vim nnoremap <buffer> <M-m> :Source<CR>
+
 
 function! ToggleQuickFix()
     if empty(filter(getwininfo(), 'v:val.quickfix'))
@@ -175,6 +219,8 @@ noremap ) 0
 
 nnoremap k gk
 nnoremap j gj
+vnoremap k gk
+vnoremap j gj
 
 " ctrl u and d are too hard to follow because it changes your view
 " { and } don't jump consistently so it might cause confusion
@@ -202,6 +248,9 @@ vnoremap <M-l> W
 
 inoremap <M-h> <C-Left>
 inoremap <M-l> <C-Right>
+
+" visual search
+vnoremap / y/\V<C-R>=escape(@",'/\')<CR><CR>
 
 " quick markings
 function! MarkCount(count)
@@ -242,9 +291,33 @@ function! CycleWinSkipQF()
     endwhile
 endfunction
 
+let g:last_used_win = 0
+function! CycleWinToQF()
+    if &buftype ==# 'quickfix'
+        if g:last_used_win > 0
+            execute g:last_used_win . "wincmd w"
+            let g:last_used_win = 0
+        endif
+        return
+    endif
+
+    let start_win = winnr()
+    let g:last_used_win = start_win
+    wincmd w
+    let curr_win = winnr()
+    while &buftype !=# 'quickfix' && curr_win != start_win
+        wincmd w
+        let curr_win = winnr()
+    endwhile
+    if curr_win == start_win
+        let g:last_used_win = 0
+    endif
+endfunction
+
 nnoremap <silent> w :call CycleWinSkipQF()<CR>
-nnoremap W <C-W>W
+nnoremap <silent> W :call CycleWinToQF()<CR>
 nnoremap <M-w> <C-W>w
+nnoremap <M-W> <C-W>W
 
 " buffer
 " :vert/tab sb
