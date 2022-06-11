@@ -28,13 +28,14 @@ Plug 'jhlgns/naysayer88.vim'
 Plug 'uiiaoo/java-syntax.vim'
 Plug 'bfrg/vim-cpp-modern'
 Plug 'ap/vim-css-color'
+Plug 'lukas-reineke/indent-blankline.nvim'
 
 Plug 'mbbill/undotree'
 Plug 'lifepillar/vim-mucomplete'
+Plug 'hattya/vcvars.vim'
 
 " file nav
-Plug 'ctrlpvim/ctrlp.vim'
-Plug 'lambdalisue/fern.vim'
+" Plug 'ctrlpvim/ctrlp.vim'
 
 Plug 'unblevable/quick-scope'
 Plug 'tpope/vim-surround'
@@ -43,11 +44,93 @@ Plug 'tpope/vim-repeat'
 
 " testing
 " for new plugins, to see whether i really need it or not
+Plug 'lambdalisue/fern.vim'
 Plug 'Vimjas/vim-python-pep8-indent'
-Plug 'hattya/vcvars.vim'
 Plug 'cohama/lexima.vim'
-Plug 'lukas-reineke/indent-blankline.nvim'
+Plug 'godlygeek/tabular'
+
+" Plug 'karb94/neoscroll.nvim'
+
+" Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
+" Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+" Plug 'kevinhwang91/nvim-bqf', { 'for': 'qf' }
+Plug 'andymass/vim-matchup'
 call plug#end()
+
+" neoscroll
+" only for <C-u> and <C-d>
+" lua << EOF
+" require('neoscroll').setup()
+" local t = {}
+" t['<C-u>'] = {'scroll', {'-vim.wo.scroll', 'true', '25'}}
+" t['<C-d>'] = {'scroll', {'vim.wo.scroll', 'true', '25'}}
+" t['<C-b>'] = {'scroll', {'-vim.api.nvim_win_get_height(0)', 'true', '25'}}
+" t['<C-f>'] = {'scroll', {'vim.api.nvim_win_get_height(0)', 'true', '25'}}
+" t['zt']    = {'zt', {'25'}}
+" t['zz']    = {'zz', {'25'}}
+" t['zb']    = {'zb', {'25'}}
+
+" require('neoscroll.config').set_mappings(t)
+" EOF
+
+" matchup
+" lua << EOF
+" require'nvim-treesitter.configs'.setup {
+"     matchup = {
+"         enable = true
+"     }
+" }
+" EOF
+" let g:matchup_matchparen_offscreen = { 'method': 'popup', 'border': 1 }
+let g:matchup_matchparen_offscreen = {}
+
+" bqf
+" lua << EOF
+" package.path = "C:\\Users\\user\\.config\\nvim\\plugged\\nvim-bqf\\lua\\?.lua;" .. package.path
+" require('bqf').setup({
+"     magic_window = false
+" })
+" EOF
+
+" telescope
+lua << EOF
+require('telescope').setup {
+    defaults = {
+        default_mappings = {
+            i = {
+                ['<Down>'] = 'move_selection_next',
+                ['<Up>'] = 'move_selection_previous',
+                ['<S-Tab>'] = 'move_selection_next',
+                ['<Tab>'] = 'move_selection_previous',
+                ['<CR>'] = 'select_default',
+                ['<C-v>'] = 'select_vertical',
+                ['<C-h>'] = 'which_key',
+                ['jj'] = 'close',
+                ['<Esc>'] = 'close',
+            },
+            n = {
+                ['<Down>'] = 'move_selection_next',
+                ['<Up>'] = 'move_selection_previous',
+                ['j'] = 'move_selection_next',
+                ['k'] = 'move_selection_previous',
+                ['<S-Tab>'] = 'move_selection_next',
+                ['<Tab>'] = 'move_selection_previous',
+                ['<CR>'] = 'select_default',
+                ['<Esc>'] = 'close',
+                ['?'] = 'which_key',
+            }
+        },
+        layout_strategy = 'vertical',
+        layout_config = {
+            width = 0.5,
+        }
+    },
+}
+EOF
+
+" au FileType TelescopePrompt inoremap <silent> <Esc> <Esc>:quit!<CR>
 
 " undotree
 nnoremap <silent> <M-u> :UndotreeToggle<CR>
@@ -56,25 +139,97 @@ let g:undotree_SplitWidth = 33
 " ctrlp
 let g:ctrlp_cmd = 'CtrlPMRUFiles'
 let g:ctrlp_switch_buffer = 'et'
-let g:ctrlp_types = ['mru', 'mixed']
+let g:ctrlp_types = ['mru', 'buf', 'mixed']
 let g:ctrlp_extensions = ['mixed']
 
-" indent guides
-"let g:indent_guides_enable_on_vim_startup = 1
-"let g:indent_guides_start_level = 2
-"let g:indent_guides_guide_size  = 1
-"let g:indent_guides_auto_colors = 0
-"autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#031f1f
-""#182327 #101a1a
-"autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#042327
+" quick-scope
+let g:qs_filetype_blacklist = ['qf', 'ctrlp', 'undotree']
+
+" fern
+let g:fern#hide_cursor = 1
+let g:fern#default_hidden = 1
+let g:fern#disable_default_mappings = 1
+let g:fern#renderer#default#leading = '   '
+let g:fern#renderer#default#leaf_symbol = '   '
+let g:fern#renderer#default#collapsed_symbol = ' + '
+let g:fern#renderer#default#expanded_symbol = ' - '
+
+func! s:quit_fern()
+    if len(getbufinfo({'buflisted':1})) == 0
+        execute ':bd'
+    else
+        execute ':bp'
+    endif
+endfunc
+
+func! s:init_fern() abort
+    nmap <buffer> <nowait> d <Plug>(fern-action-new-dir)
+    nmap <buffer> <nowait> f <Plug>(fern-action-new-file)
+
+    nmap <buffer> <nowait> c <Plug>(fern-action-copy)
+
+    nmap <buffer> <nowait> D <Plug>(fern-action-trash)
+
+    nmap <buffer> <nowait> R <Plug>(fern-action-rename)
+
+    nmap <buffer> <nowait> <F5> <Plug>(fern-action-reload)
+    nmap <buffer> <nowait> l <Plug>(fern-action-open-or-expand)
+    nmap <buffer> <nowait> h <Plug>(fern-action-collapse)
+    nmap <buffer> <nowait> <Return> <Plug>(fern-action-open-or-enter)
+    nmap <buffer> <nowait> <Backspace> <Plug>(fern-action-leave)
+    nmap <buffer> <nowait> L <Plug>(fern-action-enter)
+    nmap <buffer> <nowait> H <Plug>(fern-action-leave)
+
+    nmap <buffer> <nowait> m <Plug>(fern-action-mark)
+    vmap <buffer> <nowait> m <Plug>(fern-action-mark)
+
+    nmap <buffer> <nowait> y <Plug>(fern-action-yank)
+
+    nmap <buffer> <nowait> !  <Plug>(fern-action-hidden)
+
+    nmap <buffer> <nowait> <C-c> <Plug>(fern-action-cancel)
+    nmap <buffer> <nowait> <C-l> <Plug>(fern-action-redraw)
+
+    nnoremap <buffer> <silent> q :call <SID>quit_fern()<CR>
+endfunc
+augroup my-fern
+    autocmd! *
+    autocmd FileType fern call s:init_fern()
+augroup END
+
+func! s:on_highlight() abort
+    hi link FernMarkedLine Statement
+    hi link FernMarkedText Statement
+    hi SignColumn guibg=#042327
+endfunc
+augroup my-fern-highlight
+  autocmd!
+  autocmd User FernHighlight call s:on_highlight()
+augroup END
+
+nnoremap <silent> <M-e> :Fern . -reveal=%<CR>
+
+" tabular
+nnoremap <M-a> :Tabularize /=<CR>
+vnoremap <M-a> :Tabularize /=<CR>
 
 " lexima
 " let g:lexima_no_default_rules=1
 let g:lexima_enable_basic_rules=0
 let g:lexima_enable_newline_rules=0
-call lexima#add_rule({'char': '{', 'at': '^struct .*\%#', 'input_after': '};'})
-call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input_after': '<CR>'})
-call lexima#add_rule({'char': '<CR>', 'at': '{\%#$', 'input_after': '<CR>}', 'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s.+)\n)*\1\}'})
+" call lexima#add_rule({'char': '{', 'at': '\(struct\|union\) .*\%#', 'input_after': '};'})
+" call lexima#add_rule({'char': '{', 'at': '\(int\|float\|char\).*= \%#', 'input_after': '};'})
+" call lexima#add_rule({'char': '{', 'at': 'case .*\%#', 'input_after': '} break;'})
+"
+" call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\) .*{\%#$', 'input_after': '<CR>};'})
+" call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*: {\%#$', 'input_after': '<CR>} break;'})
+" call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input_after': '<CR>'})
+" call lexima#add_rule({'char': '<CR>', 'at': '{\%#$', 'input_after': '<CR>}', 'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s.+)\n)*\1\}'})
+
+call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\) .*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s'})
+call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*: {\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s'})
+call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input': '<CR><CR><Esc><Up>"_s'})
+call lexima#add_rule({'char': '<CR>', 'at': '{\%#$', 'input': '<CR><CR>}<Esc><Up>"_s', 'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s.+)\n)*\1\}'})
 
 " indent blankline
 set list
@@ -82,8 +237,10 @@ let g:indent_blankline_show_first_indent_level = v:false
 let g:indent_blankline_max_indent_increase = 1
 let g:indent_blankline_show_trailing_blankline_indent = v:false
 autocmd VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
+autocmd VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
 
 " -------- CONFIGURATIONS
+cd D:\programming
 set title
 set scrolloff=3
 
@@ -93,11 +250,20 @@ set linebreak
 
 set autochdir
 
+set number
+set relativenumber
+
+autocmd VimEnter,Colorscheme * :hi LineNr guifg=#666666
+autocmd VimEnter,Colorscheme * :hi LineNrAbove guifg=#042327
+autocmd VimEnter,Colorscheme * :hi LineNrBelow guifg=#042327
+
 set tabstop=4
 set shiftwidth=4
 set expandtab
 
 set splitright
+
+set switchbuf+=uselast
 
 set autoindent
 set smartindent
@@ -122,6 +288,8 @@ set switchbuf=usetab
 set hidden
 
 filetype plugin indent on
+
+let g:html_indent_script1 = "zero"
 
 autocmd FileType c,cpp setlocal comments=://
 autocmd FileType c,cpp setlocal commentstring=//%s
@@ -158,7 +326,7 @@ set statusline=\ %-{StatuslineFilename()}\ %-{StatuslineModified()}\|\ %-{Status
 autocmd FileType qf setlocal statusline=\ %-{StatuslineQuickfixTitle()}\|\ %-{StatuslineLine()}\ \|\ qf
 
 " ---- COMPILING
-let g:latest_cpp = '17.0' " '2022' vcvars#list()[-1]
+" let g:latest_cpp = '17.0' " '2022' vcvars#list()[-1]
 
 func! InitCPP()
     let latest_cpp = vcvars#list()[-1]
@@ -187,13 +355,13 @@ autocmd FileType c,cpp setlocal makeprg=build
 autocmd FileType vim nnoremap <buffer> <M-m> :Source<CR>
 
 
-function! ToggleQuickFix()
+func! ToggleQuickFix()
     if empty(filter(getwininfo(), 'v:val.quickfix'))
         copen
     else
         cclose
     endif
-endfunction
+endfunc
 
 " errors
 nnoremap <silent> <M-n> :call ToggleQuickFix()<CR>
@@ -205,7 +373,7 @@ nnoremap <silent> <M->> :cnext<CR>
 " -------- MAPPINGS
 
 " disable highlighting with escape
-nnoremap <silent> <ESC> :noh<CR><ESC>
+nnoremap <silent> <Esc> <Esc>:noh<CR>
 
 "  exit terminal
 tnoremap <S-Escape> <C-\><C-N>
@@ -217,23 +385,23 @@ noremap ^ 0
 " WARNING: i don't use text object motions(?)
 noremap ) 0
 
-nnoremap k gk
-nnoremap j gj
-vnoremap k gk
-vnoremap j gj
+nnoremap <silent> k gk
+nnoremap <silent> j gj
+vnoremap <silent> k gk
+vnoremap <silent> j gj
 
 " ctrl u and d are too hard to follow because it changes your view
 " { and } don't jump consistently so it might cause confusion
 " 10 is just a random number
-nnoremap K 10gk
-nnoremap J 10gj
-vnoremap K 10k
-vnoremap J 10j
+nnoremap <silent> K 10gk
+nnoremap <silent> J 10gj
+vnoremap <silent> K 10k
+vnoremap <silent> J 10j
 
-nnoremap <M-k> <C-u>
-nnoremap <M-j> <C-d>
-vnoremap <M-k> <C-u>
-vnoremap <M-j> <C-d>
+nnoremap <silent> <M-k> 20gk
+nnoremap <silent> <M-j> 20gj
+vnoremap <silent> <M-k> 20gk
+vnoremap <silent> <M-j> 20gj
 
 " movement
 nnoremap H b
@@ -253,10 +421,10 @@ inoremap <M-l> <C-Right>
 vnoremap / y/\V<C-R>=escape(@",'/\')<CR><CR>
 
 " quick markings
-function! MarkCount(count)
+func! MarkCount(count)
     execute ":normal! m" . a:count
     echom 'mark ' . a:count . ' set on line ' . line('.')
-endfunction
+endfunc
 
 nnoremap <silent> <Space>   :<C-u>call MarkCount(v:count)<CR>
 nnoremap <silent> <S-Space> :<C-u>execute ":normal! '" . v:count<CR>
@@ -265,7 +433,7 @@ nnoremap M '
 " emacs-style go-to-line
 " i can't really do 'line'G because of my broken number keys
 " i think this is better 'line'G
-function! GoToLine()
+func! GoToLine()
     call inputsave()
     let line = input('go to line: ')
     call inputrestore()
@@ -277,22 +445,25 @@ function! GoToLine()
             echom "no non-digit characters!"
         endif
     endif
-endfunction
+endfunc
 
 nnoremap gl :call GoToLine()<CR>
 
 " quick window switch
-" do we need W?
-function! CycleWinSkipQF()
+func! CycleWinSkipQF(backwards)
     let start_win = winnr()
-    wincmd w
+    let key = 'w'
+    if (a:backwards == 1)
+        let key = 'W'
+    endif
+    execute 'wincmd ' . key
     while &buftype ==# 'quickfix' && winnr() != start_win
-        wincmd w
+        execute 'wincmd ' . key
     endwhile
-endfunction
+endfunc
 
 let g:last_used_win = 0
-function! CycleWinToQF()
+func! CycleWinToQF()
     if &buftype ==# 'quickfix'
         if g:last_used_win > 0
             execute g:last_used_win . "wincmd w"
@@ -312,32 +483,28 @@ function! CycleWinToQF()
     if curr_win == start_win
         let g:last_used_win = 0
     endif
-endfunction
+endfunc
 
-nnoremap <silent> w :call CycleWinSkipQF()<CR>
-nnoremap <silent> W :call CycleWinToQF()<CR>
-nnoremap <M-w> <C-W>w
-nnoremap <M-W> <C-W>W
+nnoremap <silent> w :call CycleWinSkipQF(0)<CR>
+nnoremap <silent> W :call CycleWinSkipQF(1)<CR>
+nnoremap <silent> <M-w> :call CycleWinToQF()<CR>
+" nnoremap <M-w> <C-W>w
+" nnoremap <M-W> <C-W>W
 
 " buffer
 " :vert/tab sb
 " TODO: better buffer????
 nnoremap b <C-^>
-nnoremap B :b 
-
-" file
-" TODO: better file, make it like mark? E opens current dir,
-" 1E opens from a list
-nnoremap E1 :call feedkeys(':e %:p:h<Tab>', 't')<CR>
-nmap EE E1
-nnoremap E2 :e D:\programming\
-nnoremap E3 :e C:\Users\user\Documents\
-nnoremap E4 :e D:\sch\KULIAH\
+" nnoremap B :b 
+" nnoremap B :CtrlPBuffer<CR>
+nnoremap <silent> B :lua require('telescope.builtin').buffers({ignore_current_buffer = true, sort_mru = true})<CR>
+nnoremap <silent> <C-P> :lua require('telescope.builtin').oldfiles()<CR>
 
 " auto-complete filename
 inoremap <silent> <C-F> <C-X><C-F>
 
 nnoremap <M-f> %
+vnoremap <M-f> %
 " nmap <M-f> *
 " nmap <M-F> #
 
@@ -386,7 +553,7 @@ nnoremap Y y$
 
 " emacs-style replace
 " edited version of https://stackoverflow.com/questions/7598133/how-to-search-and-replace-globally-starting-from-the-cursor-position-and-wrappi
-function! Replace()
+func! Replace()
     call inputsave()
     let find = input('find: ')
     let replace = input('replace: ')
@@ -423,7 +590,7 @@ function! Replace()
     if line("''") > 1
         1,''-&&"
     endif
-endfunction
+endfunc
 
 nnoremap <Leader>r :call Replace()<CR>
 
@@ -467,6 +634,8 @@ imap <M-q> =
 imap <M-p> +
 imap <M-m> -
 imap <M-u> _
+imap <M-U> _
+" ^ for convenience typing constants
 imap <M-f> 5
 imap <M-F> %
 imap <M-s> 6
@@ -478,12 +647,15 @@ cmap <M-q> =
 cmap <M-p> +
 cmap <M-m> -
 cmap <M-u> _
+cmap <M-U> _
 cmap <M-f> 5
 cmap <M-F> %
 cmap <M-s> 6
 cmap <M-S> ^
 cmap <M-g> `
 cmap <M-G> ~
+
+inoremap <M-a> ->
 
 
 
