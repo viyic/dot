@@ -23,12 +23,16 @@
 
 " -------- PLUGINS
 call plug#begin('~/.config/nvim/plugged')
+
+" color scheme
 Plug 'tomasr/molokai'
 Plug 'jhlgns/naysayer88.vim'
 Plug 'uiiaoo/java-syntax.vim'
 Plug 'bfrg/vim-cpp-modern'
 Plug 'ap/vim-css-color'
 Plug 'lukas-reineke/indent-blankline.nvim'
+Plug 'tbastos/vim-lua'
+Plug 'Tetralux/odin.vim'
 
 Plug 'mbbill/undotree'
 Plug 'lifepillar/vim-mucomplete'
@@ -49,31 +53,18 @@ Plug 'Vimjas/vim-python-pep8-indent'
 Plug 'cohama/lexima.vim'
 Plug 'godlygeek/tabular'
 
-" Plug 'karb94/neoscroll.nvim'
-
-" Plug 'nvim-telescope/telescope-fzf-native.nvim', { 'do': 'make' }
-" Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-telescope/telescope.nvim'
-" Plug 'kevinhwang91/nvim-bqf', { 'for': 'qf' }
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+
 Plug 'andymass/vim-matchup'
+
+Plug 'mattn/emmet-vim'
+" Plug '2072/PHP-Indenting-for-VIm'
+Plug 'voldikss/vim-floaterm'
+Plug 'neomake/neomake'
+" Plug 'tpope/vim-dispatch'
 call plug#end()
-
-" neoscroll
-" only for <C-u> and <C-d>
-" lua << EOF
-" require('neoscroll').setup()
-" local t = {}
-" t['<C-u>'] = {'scroll', {'-vim.wo.scroll', 'true', '25'}}
-" t['<C-d>'] = {'scroll', {'vim.wo.scroll', 'true', '25'}}
-" t['<C-b>'] = {'scroll', {'-vim.api.nvim_win_get_height(0)', 'true', '25'}}
-" t['<C-f>'] = {'scroll', {'vim.api.nvim_win_get_height(0)', 'true', '25'}}
-" t['zt']    = {'zt', {'25'}}
-" t['zz']    = {'zz', {'25'}}
-" t['zb']    = {'zb', {'25'}}
-
-" require('neoscroll.config').set_mappings(t)
-" EOF
 
 " matchup
 " lua << EOF
@@ -85,14 +76,6 @@ call plug#end()
 " EOF
 " let g:matchup_matchparen_offscreen = { 'method': 'popup', 'border': 1 }
 let g:matchup_matchparen_offscreen = {}
-
-" bqf
-" lua << EOF
-" package.path = "C:\\Users\\user\\.config\\nvim\\plugged\\nvim-bqf\\lua\\?.lua;" .. package.path
-" require('bqf').setup({
-"     magic_window = false
-" })
-" EOF
 
 " telescope
 lua << EOF
@@ -154,12 +137,16 @@ let g:fern#renderer#default#leaf_symbol = '   '
 let g:fern#renderer#default#collapsed_symbol = ' + '
 let g:fern#renderer#default#expanded_symbol = ' - '
 
+let g:fern_quit_buffer_num = 0
+
+func! MyFern()
+    let g:fern_quit_buffer_num = bufnr()
+    execute ":Fern . -reveal=%"
+endfunc
+
 func! s:quit_fern()
-    if len(getbufinfo({'buflisted':1})) == 0
-        execute ':bd'
-    else
-        execute ':bp'
-    endif
+    execute ":b" . g:fern_quit_buffer_num
+    let g:fern_quit_buffer_num = 0
 endfunc
 
 func! s:init_fern() abort
@@ -207,27 +194,20 @@ augroup my-fern-highlight
   autocmd User FernHighlight call s:on_highlight()
 augroup END
 
-nnoremap <silent> <M-e> :Fern . -reveal=%<CR>
+nnoremap <silent> <M-e> :call MyFern()<CR>
 
 " tabular
 nnoremap <M-a> :Tabularize /=<CR>
 vnoremap <M-a> :Tabularize /=<CR>
 
 " lexima
-" let g:lexima_no_default_rules=1
 let g:lexima_enable_basic_rules=0
 let g:lexima_enable_newline_rules=0
-" call lexima#add_rule({'char': '{', 'at': '\(struct\|union\) .*\%#', 'input_after': '};'})
-" call lexima#add_rule({'char': '{', 'at': '\(int\|float\|char\).*= \%#', 'input_after': '};'})
-" call lexima#add_rule({'char': '{', 'at': 'case .*\%#', 'input_after': '} break;'})
-"
-" call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\) .*{\%#$', 'input_after': '<CR>};'})
-" call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*: {\%#$', 'input_after': '<CR>} break;'})
-" call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input_after': '<CR>'})
-" call lexima#add_rule({'char': '<CR>', 'at': '{\%#$', 'input_after': '<CR>}', 'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s.+)\n)*\1\}'})
 
-call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\) .*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s'})
-call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*: {\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s'})
+" call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\) .*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s'})
+" call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).* {\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s'})
+call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\).*\n.*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s'})
+call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*\n.*{\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s'})
 call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input': '<CR><CR><Esc><Up>"_s'})
 call lexima#add_rule({'char': '<CR>', 'at': '{\%#$', 'input': '<CR><CR>}<Esc><Up>"_s', 'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s.+)\n)*\1\}'})
 
@@ -239,10 +219,38 @@ let g:indent_blankline_show_trailing_blankline_indent = v:false
 autocmd VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
 autocmd VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
 
+" floaterm
+let g:floaterm_title = 'cmd'
+autocmd VimEnter * :FloatermNew --silent C:\Windows\System32\cmd.exe /K D:\exec\initcmd.bat
+nnoremap <silent> <M-c> :FloatermToggle<CR>
+tnoremap <silent> <M-c> <C-\><C-n>:FloatermToggle<CR>
+
+" mucomplete
+let g:mucomplete#chains = {
+    \ 'default' : ['path', 'omni', 'c-n', 'dict', 'uspl'],
+    \ 'vim'     : ['path', 'cmd', 'keyn']
+    \ }
+
+" neomake
+" let g:neomake_open_list = 2
+" let g:neomake_buffer_output = 0
+call neomake#config#set('maker_defaults.buffer_output', 0)
+let g:neomake_place_signs = 0
+let g:neomake_highlight_columns = 0
+let g:neomake_highlight_lines = 1
+
+autocmd Colorscheme * :hi NeomakeError guibg=#770000
+autocmd Colorscheme * :hi NeomakeWarning guibg=#770000
+
+au BufEnter,BufNew *.php :set filetype=phtml
+
 " -------- CONFIGURATIONS
 cd D:\programming
+set backupdir=~\AppData\Local\nvim-data\backup\\
 set title
 set scrolloff=3
+
+set completeopt-=preview
 
 set showbreak=↪\ 
 set breakindent
@@ -270,10 +278,14 @@ set smartindent
 
 set mouse=nv
 
-set cino=(0,l1,c0
+" (0 indent to unclosed paren
+" l1 indent to case label
+" c0 multi-line comments don't indent
+" =0 case labels don't indent
+set cino=(0,l1,c0,=0
 
 colorscheme naysayer88
-set guifont=Consolas:h10
+set guifont=Consolas\ ligaturized\ v3:h10
 hi QuickFixLine guibg=#031216
 
 set whichwrap+=<,>,h,l,[,]
@@ -322,38 +334,54 @@ function! StatuslineQuickfixTitle()
   return exists('w:quickfix_title') ? w:quickfix_title : '[no name] '
 endfunction
 
+function! StatuslineCompiling()
+  return ''
+  "neomake#statusline#get(bufnr())
+endfunction
+
 set statusline=\ %-{StatuslineFilename()}\ %-{StatuslineModified()}\|\ %-{StatuslineLine()}\ \|\ %-{StatuslineFiletype()}\ %-{StatuslineReadonly()}
+"\ %{StatuslineCompiling()}
 autocmd FileType qf setlocal statusline=\ %-{StatuslineQuickfixTitle()}\|\ %-{StatuslineLine()}\ \|\ qf
 
 " ---- COMPILING
 " let g:latest_cpp = '17.0' " '2022' vcvars#list()[-1]
 
 func! InitCPP()
-    let latest_cpp = vcvars#list()[-1]
-    let vars = call('vcvars#get', [latest_cpp])
-    if empty(vars)
-        echo 'InitCPP Error: vars is empty'
-        return
-    endif
+    if !exists("g:vcvars_initted")
+        let g:vcvars_initted = 1
+        let latest_cpp = vcvars#list()[-1]
+        let vars = call('vcvars#get', [latest_cpp])
+        if empty(vars)
+            echo 'InitCPP Error: vars is empty'
+            return
+        endif
 
-    let path = $PATH
-    let include = $INCLUDE
-    let lib = $LIB
-    let libpath = $LIBPATH
-    let sep = ';'
-    let $PATH    = join(vars.path + [path], sep)
-    let $INCLUDE = join(vars.include + [include], sep)
-    let $LIB     = join(vars.lib + [lib], sep)
-    let $LIBPATH = join(vars.libpath + [libpath], sep)
+        let path = $PATH
+        let include = $INCLUDE
+        let lib = $LIB
+        let libpath = $LIBPATH
+        let sep = ';'
+        let $PATH    = join(vars.path + [path], sep)
+        let $INCLUDE = join(vars.include + [include], sep)
+        let $LIB     = join(vars.lib + [lib], sep)
+        let $LIBPATH = join(vars.libpath + [libpath], sep)
+    endif
 endfunc
+autocmd FileType c,cpp call InitCPP()
 command! Vcvars execute ':call InitCPP()'
+" command! Test dispatch#compile_command(0, '--', 0, 'rightbelow')
 " autocmd VimEnter * call InitCPP()
 
-nnoremap <M-m> :make<CR>
-autocmd FileType c,cpp setlocal makeprg=build
+" make build.bat the default?
+set makeprg=build
+" nnoremap <M-m> :silent make<CR>
+nnoremap <M-m> :Neomake!<CR>
+" autocmd FileType c,cpp setlocal makeprg=build
 " autocmd FileType c,cpp nnoremap <buffer> <silent> <M-m> :call vcvars#call('make', g:latest_cpp)<CR>
+" autocmd FileType c,cpp setlocal iskeyword-=_
 autocmd FileType vim nnoremap <buffer> <M-m> :Source<CR>
-
+autocmd FileType lua setlocal makeprg=run
+autocmd FileType lua nnoremap <buffer> <M-m> :silent make!<CR>
 
 func! ToggleQuickFix()
     if empty(filter(getwininfo(), 'v:val.quickfix'))
@@ -367,8 +395,17 @@ endfunc
 nnoremap <silent> <M-n> :call ToggleQuickFix()<CR>
 nnoremap <silent> <M-,> :cbefore<CR>
 nnoremap <silent> <M-.> :cafter<CR>
-nnoremap <silent> <M-<> :cprevious<CR>
-nnoremap <silent> <M->> :cnext<CR>
+nnoremap <silent> <M-;> :cprevious<CR>
+nnoremap <silent> <M-'> :cnext<CR>
+
+let g:user_emmet_install_global = 0
+autocmd FileType html,css,php,htmldjango EmmetInstall
+let g:user_emmet_leader_key='\'
+let g:user_emmet_settings = {
+    \ 'html' : {
+        \ 'block_all_childless' : 1,
+    \ },
+\}
 
 " -------- MAPPINGS
 
@@ -403,6 +440,9 @@ nnoremap <silent> <M-j> 20gj
 vnoremap <silent> <M-k> 20gk
 vnoremap <silent> <M-j> 20gj
 
+nnoremap <silent> <C-j> J
+nnoremap <silent> <M-d> gD
+
 " movement
 nnoremap H b
 nnoremap L w
@@ -414,11 +454,24 @@ nnoremap <M-l> W
 vnoremap <M-h> B
 vnoremap <M-l> W
 
+nnoremap <C-h> :set iskeyword-=_<CR>b:set iskeyword+=_<CR>
+nnoremap <C-l> :set iskeyword-=_<CR>w:set iskeyword+=_<CR>
+vnoremap <C-h> :set iskeyword-=_<CR>b:set iskeyword+=_<CR>
+vnoremap <C-l> :set iskeyword-=_<CR>w:set iskeyword+=_<CR>
+
 inoremap <M-h> <C-Left>
 inoremap <M-l> <C-Right>
 
+" easier to type macros
+inoremap <S-Space> _
+cnoremap <S-Space> _
+
+" if 0 comment
+vnoremap <M-u> I#if<Space>0<CR><Esc>gvA<Esc>A<CR>#endif<Esc>
+
 " visual search
 vnoremap / y/\V<C-R>=escape(@",'/\')<CR><CR>
+vmap * /
 
 " quick markings
 func! MarkCount(count)
@@ -490,6 +543,8 @@ nnoremap <silent> W :call CycleWinSkipQF(1)<CR>
 nnoremap <silent> <M-w> :call CycleWinToQF()<CR>
 " nnoremap <M-w> <C-W>w
 " nnoremap <M-W> <C-W>W
+
+nnoremap <M-g> :grep!  *<Left><Left>
 
 " buffer
 " :vert/tab sb
@@ -598,6 +653,19 @@ nnoremap <Leader>r :call Replace()<CR>
 command! Init execute ':e C:\Users\user\AppData\Local\nvim\init.vim'
 command! Source execute ':source $MYVIMRC'
 command! BufOnly execute '%bdelete | edit # | normal `"'
+command! Smol execute ":execute ':Vcvars' | execute ':e D:/programming/c_cpp/smol/main.cpp'"
+
+" -- SESSIONS
+func! s:loadsession(name)
+    execute ':source D:\\Nvy\\'. a:name
+endfunc
+
+func! s:savesession(name)
+    execute ':mksession! D:\\Nvy\\'. a:name
+endfunc
+
+command! -nargs=1 SSave call s:savesession(<q-args>)
+command! -nargs=1 SLoad call s:loadsession(<q-args>)
 
 " ctrl+s saving
 noremap  <C-S> :update<CR>
@@ -617,6 +685,11 @@ autocmd BufNewFile *.java
 
 " C++
 nnoremap <silent> <M-b> :e %:p:s,.h$,.X123X,:s,.cpp$,.h,:s,.X123X$,.cpp,<CR>
+
+inoremap <Leader>url {{ url_for('') }}
+inoremap <Leader>for {% for  in  %}<Enter>{% endfor %}
+inoremap <Leader>bp {%  %}<Left><Left><Left>
+inoremap <Leader>bb {{  }}<Left><Left><Left>
 
 " ---- BROKEN KEYBOARD MAPS D:
 nmap <silent> <M-v> <C-V>
