@@ -25,7 +25,7 @@
 call plug#begin('~/.config/nvim/plugged')
 
 " color scheme
-Plug 'tomasr/molokai'
+" Plug 'tomasr/molokai'
 Plug 'jhlgns/naysayer88.vim'
 Plug 'uiiaoo/java-syntax.vim'
 Plug 'bfrg/vim-cpp-modern'
@@ -52,6 +52,7 @@ Plug 'lambdalisue/fern.vim'
 Plug 'Vimjas/vim-python-pep8-indent'
 Plug 'cohama/lexima.vim'
 Plug 'godlygeek/tabular'
+Plug 'evanleck/vim-svelte'
 
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
@@ -64,6 +65,8 @@ Plug 'mattn/emmet-vim'
 Plug 'voldikss/vim-floaterm'
 Plug 'neomake/neomake'
 " Plug 'tpope/vim-dispatch'
+
+Plug 'mg979/vim-visual-multi', {'branch': 'master'}
 call plug#end()
 
 " matchup
@@ -128,11 +131,15 @@ let g:ctrlp_extensions = ['mixed']
 " quick-scope
 let g:qs_filetype_blacklist = ['qf', 'ctrlp', 'undotree']
 
+" vim-visual-multi
+let g:VM_mouse_mappings = 1
+let g:VM_leader = '\\'
+
 " fern
 let g:fern#hide_cursor = 1
 let g:fern#default_hidden = 1
 let g:fern#disable_default_mappings = 1
-let g:fern#renderer#default#leading = '   '
+let g:fern#renderer#default#leading = ''
 let g:fern#renderer#default#leaf_symbol = '   '
 let g:fern#renderer#default#collapsed_symbol = ' + '
 let g:fern#renderer#default#expanded_symbol = ' - '
@@ -195,6 +202,7 @@ augroup my-fern-highlight
 augroup END
 
 nnoremap <silent> <M-e> :call MyFern()<CR>
+command! Drawer execute ':Fern . -drawer'
 
 " tabular
 nnoremap <M-a> :Tabularize /=<CR>
@@ -206,10 +214,12 @@ let g:lexima_enable_newline_rules=0
 
 " call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\) .*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s'})
 " call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).* {\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s'})
-call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\).*\n.*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s'})
-call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*\n.*{\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s'})
+call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\).*\n.*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s', 'filetype': ['c', 'cpp']})
+call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*\n.*{\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s', 'filetype': ['c', 'cpp']})
 call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input': '<CR><CR><Esc><Up>"_s'})
 call lexima#add_rule({'char': '<CR>', 'at': '{\%#$', 'input': '<CR><CR>}<Esc><Up>"_s', 'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s.+)\n)*\1\}'})
+call lexima#add_rule({'char': '<CR>', 'at': '<.*>\%#</.*>', 'input': '<CR><Tab><CR><BS><Esc><Up>A'})
+call lexima#add_rule({'char': '<BS>', 'at': '// \%#$', 'input': '<BS><BS><BS>'})
 
 " indent blankline
 set list
@@ -243,6 +253,8 @@ autocmd Colorscheme * :hi NeomakeError guibg=#770000
 autocmd Colorscheme * :hi NeomakeWarning guibg=#770000
 
 au BufEnter,BufNew *.php :set filetype=phtml
+au BufEnter,BufNew *.f7 :set filetype=html
+au Filetype phtml :set autoindent
 
 " -------- CONFIGURATIONS
 cd D:\programming
@@ -285,7 +297,8 @@ set mouse=nv
 set cino=(0,l1,c0,=0
 
 colorscheme naysayer88
-set guifont=Consolas\ ligaturized\ v3:h10
+" set guifont=Consolas\ ligaturized\ v3:h10
+set guifont=Consolas:h10
 hi QuickFixLine guibg=#031216
 
 set whichwrap+=<,>,h,l,[,]
@@ -379,9 +392,13 @@ nnoremap <M-m> :Neomake!<CR>
 " autocmd FileType c,cpp setlocal makeprg=build
 " autocmd FileType c,cpp nnoremap <buffer> <silent> <M-m> :call vcvars#call('make', g:latest_cpp)<CR>
 " autocmd FileType c,cpp setlocal iskeyword-=_
+" autocmd FileType odin setlocal makeprg=odin\ build\ .
 autocmd FileType vim nnoremap <buffer> <M-m> :Source<CR>
 autocmd FileType lua setlocal makeprg=run
 autocmd FileType lua nnoremap <buffer> <M-m> :silent make!<CR>
+autocmd FileType rust setlocal makeprg=cargo\ b\ --message-format\ short
+
+set errorformat+=%f(%l:%c)\ %m " odin
 
 func! ToggleQuickFix()
     if empty(filter(getwininfo(), 'v:val.quickfix'))
@@ -399,13 +416,14 @@ nnoremap <silent> <M-;> :cprevious<CR>
 nnoremap <silent> <M-'> :cnext<CR>
 
 let g:user_emmet_install_global = 0
-autocmd FileType html,css,php,htmldjango EmmetInstall
+autocmd FileType html,css,php,htmldjango,svelte EmmetInstall
 let g:user_emmet_leader_key='\'
 let g:user_emmet_settings = {
     \ 'html' : {
-        \ 'block_all_childless' : 1,
+        \ 'quote_char' : "'",
     \ },
 \}
+" \ 'block_all_childless' : 1,
 
 " -------- MAPPINGS
 
@@ -440,7 +458,9 @@ nnoremap <silent> <M-j> 20gj
 vnoremap <silent> <M-k> 20gk
 vnoremap <silent> <M-j> 20gj
 
+" can't use <C-S-j> for Jx T_T
 nnoremap <silent> <C-j> J
+nnoremap <silent> <C-k> Jx
 nnoremap <silent> <M-d> gD
 
 " movement
@@ -467,7 +487,7 @@ inoremap <S-Space> _
 cnoremap <S-Space> _
 
 " if 0 comment
-vnoremap <M-u> I#if<Space>0<CR><Esc>gvA<Esc>A<CR>#endif<Esc>
+vnoremap <M-u> 0I#if<Space>0<CR><Esc>gv$A<Esc>A<CR>#endif<Esc>
 
 " visual search
 vnoremap / y/\V<C-R>=escape(@",'/\')<CR><CR>
@@ -558,8 +578,8 @@ nnoremap <silent> <C-P> :lua require('telescope.builtin').oldfiles()<CR>
 " auto-complete filename
 inoremap <silent> <C-F> <C-X><C-F>
 
-nnoremap <M-f> %
-vnoremap <M-f> %
+nmap <M-f> %
+vmap <M-f> %
 " nmap <M-f> *
 " nmap <M-F> #
 
@@ -650,7 +670,7 @@ endfunc
 nnoremap <Leader>r :call Replace()<CR>
 
 " ---- COMMANDS
-command! Init execute ':e C:\Users\user\AppData\Local\nvim\init.vim'
+command! Init execute ':e C:\Users\xoxo\AppData\Local\nvim\init.vim'
 command! Source execute ':source $MYVIMRC'
 command! BufOnly execute '%bdelete | edit # | normal `"'
 command! Smol execute ":execute ':Vcvars' | execute ':e D:/programming/c_cpp/smol/main.cpp'"
