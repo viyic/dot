@@ -4,70 +4,80 @@
 " ### #  # ###  #
 "
 " Cheatsheet:
-" <M-u> Undotree
-"
-" <C-P>: CtrlPMixed
-" <C-F>: Change modes
+" <M-u> undotree
+" <M-r> replace
 "
 " b/B: buffer
-" <C-W><S-T>: move current buffer to new tab
+" w/W: window
 "
 " U: toggle comment
-"
-" TODO:
-" . ctrlp is useless? i only need MRU?
-" . subtler indent guide color
-" . fix double tab autocompletion
-" . fix naysayer88 tab color
-" 
 
 " -------- PLUGINS
 call plug#begin('~/.config/nvim/plugged')
 
-" color scheme
-" Plug 'tomasr/molokai'
-Plug 'jhlgns/naysayer88.vim'
-Plug 'uiiaoo/java-syntax.vim'
-Plug 'bfrg/vim-cpp-modern'
-Plug 'ap/vim-css-color'
+Plug 'viyic/naysayer88.vim' " color scheme
 Plug 'lukas-reineke/indent-blankline.nvim'
+
+" Plug 'ap/vim-css-color'
+Plug 'bfrg/vim-cpp-modern'
+Plug 'uiiaoo/java-syntax.vim'
 Plug 'tbastos/vim-lua'
 Plug 'Tetralux/odin.vim'
+Plug 'evanleck/vim-svelte'
 
-Plug 'mbbill/undotree'
-Plug 'lifepillar/vim-mucomplete'
-Plug 'hattya/vcvars.vim'
+Plug 'neovim/nvim-lspconfig'
+Plug 'echasnovski/mini.completion', { 'branch': 'stable' }
 
-" file nav
-" Plug 'ctrlpvim/ctrlp.vim'
+Plug 'mattn/emmet-vim'
+Plug 'cohama/lexima.vim'
+Plug 'godlygeek/tabular'
+Plug 'andymass/vim-matchup'
 
-Plug 'unblevable/quick-scope'
+" Plug 'unblevable/quick-scope'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-repeat'
 
-" testing
-" for new plugins, to see whether i really need it or not
 Plug 'lambdalisue/fern.vim'
-Plug 'Vimjas/vim-python-pep8-indent'
-Plug 'cohama/lexima.vim'
-Plug 'godlygeek/tabular'
-Plug 'evanleck/vim-svelte'
+Plug 'mbbill/undotree'
 
 Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.0' }
-Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-
-Plug 'andymass/vim-matchup'
-
-Plug 'mattn/emmet-vim'
-" Plug '2072/PHP-Indenting-for-VIm'
-Plug 'voldikss/vim-floaterm'
-Plug 'neomake/neomake'
-" Plug 'tpope/vim-dispatch'
+Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.1' } " the only finder that doesn't have escape delay
 
 Plug 'mg979/vim-visual-multi', {'branch': 'master'}
+
+Plug 'neomake/neomake'
+Plug 'hattya/vcvars.vim'
+
+" testing
+" for new plugins, to see whether i really need it or not
+
 call plug#end()
+
+lua << EOF
+local lspconfig = require('lspconfig')
+lspconfig.ols.setup({})
+lspconfig.denols.setup({})
+
+vim.g.markdown_fenced_languages = {
+  "ts=typescript"
+}
+
+require('mini.completion').setup({
+    window = {
+      info = { border = 'rounded' },
+      signature = { border = 'rounded' },
+    },
+})
+EOF
+" source: https://www.reddit.com/r/vim/comments/232jsu/comment/cgswb4s/
+inoremap <expr> <Tab>   getline('.')[col('.')-2] !~ '^\s\?$' \|\| pumvisible() ? '<C-N>' : '<Tab>'
+inoremap <expr> <S-Tab> getline('.')[col('.')-2] !~ '^\s\?$' \|\| pumvisible() ? '<C-P>' : '<S-Tab>'
+nnoremap <M-d> <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <M-s> <cmd>lua vim.lsp.buf.hover()<CR>
+nnoremap <M-x> <cmd>copen<CR><C-W><C-P><cmd>lua vim.lsp.buf.references()<CR>
+
+" au VimEnter,Colorscheme * :hi Pmenu guifg=#666666 " gui=nocombine
 
 " matchup
 " lua << EOF
@@ -121,12 +131,13 @@ EOF
 " undotree
 nnoremap <silent> <M-u> :UndotreeToggle<CR>
 let g:undotree_SplitWidth = 33
-
-" ctrlp
-let g:ctrlp_cmd = 'CtrlPMRUFiles'
-let g:ctrlp_switch_buffer = 'et'
-let g:ctrlp_types = ['mru', 'buf', 'mixed']
-let g:ctrlp_extensions = ['mixed']
+let g:undotree_DiffAutoOpen = 0
+function g:Undotree_CustomMap()
+    map <buffer> . <plug>UndotreeNextState
+    map <buffer> , <plug>UndotreePreviousState
+    map <buffer> J 10gj
+    map <buffer> K 10gk
+endfunction
 
 " quick-scope
 let g:qs_filetype_blacklist = ['qf', 'ctrlp', 'undotree']
@@ -134,15 +145,22 @@ let g:qs_filetype_blacklist = ['qf', 'ctrlp', 'undotree']
 " vim-visual-multi
 let g:VM_mouse_mappings = 1
 let g:VM_leader = '\\'
+" taken from an implementation of multiple cursors in vscode vim
+" i thought it's decent
+let g:VM_maps = {}
+let g:VM_maps['Skip Region'] = '<C-x>'
+let g:VM_maps['Remove Region'] = '<C-p>'
+let g:VM_maps['Select All'] = '<C-a>'
+
 
 " fern
 let g:fern#hide_cursor = 1
 let g:fern#default_hidden = 1
 let g:fern#disable_default_mappings = 1
 let g:fern#renderer#default#leading = ''
-let g:fern#renderer#default#leaf_symbol = '   '
-let g:fern#renderer#default#collapsed_symbol = ' + '
-let g:fern#renderer#default#expanded_symbol = ' - '
+" let g:fern#renderer#default#leaf_symbol = '   '
+" let g:fern#renderer#default#collapsed_symbol = ' + '
+" let g:fern#renderer#default#expanded_symbol = ' - '
 
 let g:fern_quit_buffer_num = 0
 
@@ -164,7 +182,7 @@ func! s:init_fern() abort
 
     nmap <buffer> <nowait> D <Plug>(fern-action-trash)
 
-    nmap <buffer> <nowait> R <Plug>(fern-action-rename)
+    nmap <buffer> <nowait> r <Plug>(fern-action-rename)
 
     nmap <buffer> <nowait> <F5> <Plug>(fern-action-reload)
     nmap <buffer> <nowait> l <Plug>(fern-action-open-or-expand)
@@ -185,6 +203,8 @@ func! s:init_fern() abort
     nmap <buffer> <nowait> <C-l> <Plug>(fern-action-redraw)
 
     nnoremap <buffer> <silent> q :call <SID>quit_fern()<CR>
+    setlocal nonumber
+    setlocal norelativenumber
 endfunc
 augroup my-fern
     autocmd! *
@@ -212,8 +232,6 @@ vnoremap <M-a> :Tabularize /=<CR>
 let g:lexima_enable_basic_rules=0
 let g:lexima_enable_newline_rules=0
 
-" call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\) .*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s'})
-" call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).* {\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s'})
 call lexima#add_rule({'char': '<CR>', 'at': '\(struct\|union\|enum\).*\n.*{\%#$', 'input': '<CR><CR>};<Esc><Up>"_s', 'filetype': ['c', 'cpp']})
 call lexima#add_rule({'char': '<CR>', 'at': '\(case\|default\).*\n.*{\%#$', 'input': '<CR><CR>} break;<Esc><Up>"_s', 'filetype': ['c', 'cpp']})
 call lexima#add_rule({'char': '<CR>', 'at': '{\%#}', 'input': '<CR><CR><Esc><Up>"_s'})
@@ -226,14 +244,8 @@ set list
 let g:indent_blankline_show_first_indent_level = v:false
 let g:indent_blankline_max_indent_increase = 1
 let g:indent_blankline_show_trailing_blankline_indent = v:false
-autocmd VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
-autocmd VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
-
-" floaterm
-let g:floaterm_title = 'cmd'
-autocmd VimEnter * :FloatermNew --silent C:\Windows\System32\cmd.exe /K D:\exec\initcmd.bat
-nnoremap <silent> <M-c> :FloatermToggle<CR>
-tnoremap <silent> <M-c> <C-\><C-n>:FloatermToggle<CR>
+au VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
+au VimEnter,Colorscheme * :hi IndentBlanklineChar guifg=#666666 " gui=nocombine
 
 " mucomplete
 let g:mucomplete#chains = {
@@ -249,20 +261,16 @@ let g:neomake_place_signs = 0
 let g:neomake_highlight_columns = 0
 let g:neomake_highlight_lines = 1
 
-autocmd Colorscheme * :hi NeomakeError guibg=#770000
-autocmd Colorscheme * :hi NeomakeWarning guibg=#770000
-
-au BufEnter,BufNew *.php :set filetype=phtml
-au BufEnter,BufNew *.f7 :set filetype=html
-au Filetype phtml :set autoindent
+autocmd VimEnter,Colorscheme * :hi NeomakeError guibg=#770000
+autocmd VimEnter,Colorscheme * :hi NeomakeWarning guibg=#770000
 
 " -------- CONFIGURATIONS
-cd D:\programming
+cd E:\lambda
 set backupdir=~\AppData\Local\nvim-data\backup\\
 set title
 set scrolloff=3
 
-set completeopt-=preview
+" set completeopt-=preview
 
 set showbreak=↪\ 
 set breakindent
@@ -270,38 +278,44 @@ set linebreak
 
 set autochdir
 
-set number
-set relativenumber
-
-autocmd VimEnter,Colorscheme * :hi LineNr guifg=#666666
-autocmd VimEnter,Colorscheme * :hi LineNrAbove guifg=#042327
-autocmd VimEnter,Colorscheme * :hi LineNrBelow guifg=#042327
+" set number
+" set relativenumber
 
 set tabstop=4
 set shiftwidth=4
 set expandtab
 
-set splitright
+set splitbelow splitright
 
-set switchbuf+=uselast
-
-set autoindent
-set smartindent
+" set autoindent
+" set smartindent
 
 set mouse=nv
 
-" (0 indent to unclosed paren
-" l1 indent to case label
-" c0 multi-line comments don't indent
-" =0 case labels don't indent
-set cino=(0,l1,c0,=0
+set signcolumn=no
 
 colorscheme naysayer88
-" set guifont=Consolas\ ligaturized\ v3:h10
 set guifont=Consolas:h10
-hi QuickFixLine guibg=#031216
+au VimEnter,Colorscheme * :hi LineNrAbove guifg=#042327
+au VimEnter,Colorscheme * :hi LineNrBelow guifg=#042327
+au VimEnter,Colorscheme * :hi SignColumn guibg=none
+lua << EOF
+local signs = { Error = "!", Warn = "!", Hint = "?", Info = "?" } 
+for type, icon in pairs(signs) do
+    local hl = "DiagnosticSign" .. type
+    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+end
+EOF
 
-set whichwrap+=<,>,h,l,[,]
+au FileType odin :syn match vycTodo '@\w\+'
+au FileType odin :syn match  vycComment  '//.*'                  contains=cTodo
+au FileType odin :syn region vycComment  start='/\*' end='\*/'   contains=cTodo
+au FileType odin :syn match vycType      '\v<\$*\u%(\w|\$)*>'
+au FileType odin :syn match vycConstant  '\v<%(\u|[_\$])%(\u|\d|[_\$])*>'
+au FileType odin :hi def link vycType      Type
+au FileType odin :hi def link vycConstant  Constant
+
+set whichwrap+=h,l
 
 set wildcharm=<C-Z>
 cnoremap <expr> <up> wildmenumode() ? "\<left>" : "\<up>"
@@ -309,15 +323,29 @@ cnoremap <expr> <down> wildmenumode() ? "\<right>" : "\<down>"
 cnoremap <expr> <left> wildmenumode() ? "\<up>" : "\<left>"
 cnoremap <expr> <right> wildmenumode() ? " \<bs>\<C-Z>" : "\<right>"
 
-set switchbuf=usetab
+set switchbuf=usetab,uselast
 set hidden
 
 filetype plugin indent on
 
 let g:html_indent_script1 = "zero"
 
-autocmd FileType c,cpp setlocal comments=://
-autocmd FileType c,cpp setlocal commentstring=//%s
+" (0 indent to unclosed paren
+" l1 indent to case label
+" c0 multi-line comments don't indent
+" =0 case labels don't indent
+" +0 no semicolon for odin
+set cino=(0,l1,c0,=0
+" au FileType odin setlocal cino=(0,l1,c0,+0
+" au FileType odin setlocal cindent
+" au FileType odin setlocal indentexpr=""
+
+au FileType c,cpp setlocal comments=://
+au FileType c,cpp setlocal commentstring=//%s
+
+au BufEnter,BufNew *.php setlocal filetype=phtml
+au BufEnter,BufNew *.f7 setlocal filetype=html
+au Filetype phtml setlocal autoindent
 
 " ---- STATUSLINE
 function! StatuslineFilename()
@@ -380,19 +408,13 @@ func! InitCPP()
         let $LIBPATH = join(vars.libpath + [libpath], sep)
     endif
 endfunc
-autocmd FileType c,cpp call InitCPP()
+au FileType c,cpp call InitCPP()
 command! Vcvars execute ':call InitCPP()'
-" command! Test dispatch#compile_command(0, '--', 0, 'rightbelow')
-" autocmd VimEnter * call InitCPP()
 
 " make build.bat the default?
 set makeprg=build
 " nnoremap <M-m> :silent make<CR>
 nnoremap <M-m> :Neomake!<CR>
-" autocmd FileType c,cpp setlocal makeprg=build
-" autocmd FileType c,cpp nnoremap <buffer> <silent> <M-m> :call vcvars#call('make', g:latest_cpp)<CR>
-" autocmd FileType c,cpp setlocal iskeyword-=_
-" autocmd FileType odin setlocal makeprg=odin\ build\ .
 autocmd FileType vim nnoremap <buffer> <M-m> :Source<CR>
 autocmd FileType lua setlocal makeprg=run
 autocmd FileType lua nnoremap <buffer> <M-m> :silent make!<CR>
@@ -423,7 +445,6 @@ let g:user_emmet_settings = {
         \ 'quote_char' : "'",
     \ },
 \}
-" \ 'block_all_childless' : 1,
 
 " -------- MAPPINGS
 
@@ -437,7 +458,6 @@ tnoremap <S-Escape> <C-\><C-N>
 " start of the line
 noremap 0 ^
 noremap ^ 0
-" WARNING: i don't use text object motions(?)
 noremap ) 0
 
 nnoremap <silent> k gk
@@ -445,9 +465,6 @@ nnoremap <silent> j gj
 vnoremap <silent> k gk
 vnoremap <silent> j gj
 
-" ctrl u and d are too hard to follow because it changes your view
-" { and } don't jump consistently so it might cause confusion
-" 10 is just a random number
 nnoremap <silent> K 10gk
 nnoremap <silent> J 10gj
 vnoremap <silent> K 10k
@@ -461,7 +478,7 @@ vnoremap <silent> <M-j> 20gj
 " can't use <C-S-j> for Jx T_T
 nnoremap <silent> <C-j> J
 nnoremap <silent> <C-k> Jx
-nnoremap <silent> <M-d> gD
+" nnoremap <silent> <M-d> gD
 
 " movement
 nnoremap H b
@@ -481,6 +498,9 @@ vnoremap <C-l> :set iskeyword-=_<CR>w:set iskeyword+=_<CR>
 
 inoremap <M-h> <C-Left>
 inoremap <M-l> <C-Right>
+
+nmap <M-f> %
+vmap <M-f> %
 
 " easier to type macros
 inoremap <S-Space> _
@@ -502,25 +522,6 @@ endfunc
 nnoremap <silent> <Space>   :<C-u>call MarkCount(v:count)<CR>
 nnoremap <silent> <S-Space> :<C-u>execute ":normal! '" . v:count<CR>
 nnoremap M '
-
-" emacs-style go-to-line
-" i can't really do 'line'G because of my broken number keys
-" i think this is better 'line'G
-func! GoToLine()
-    call inputsave()
-    let line = input('go to line: ')
-    call inputrestore()
-    if !empty(line)
-        if line !~ '[^0-9]'
-            execute ":normal! " . line . "G"
-        else
-            redraw
-            echom "no non-digit characters!"
-        endif
-    endif
-endfunc
-
-nnoremap gl :call GoToLine()<CR>
 
 " quick window switch
 func! CycleWinSkipQF(backwards)
@@ -561,10 +562,9 @@ endfunc
 nnoremap <silent> w :call CycleWinSkipQF(0)<CR>
 nnoremap <silent> W :call CycleWinSkipQF(1)<CR>
 nnoremap <silent> <M-w> :call CycleWinToQF()<CR>
-" nnoremap <M-w> <C-W>w
-" nnoremap <M-W> <C-W>W
 
-nnoremap <M-g> :grep!  *<Left><Left>
+" nnoremap <M-g> :grep!  *<Left><Left>
+nnoremap <silent> <M-g> :lua require('telescope.builtin').live_grep({ layout_strategy = 'horizontal', layout_config = { width = 0.8 } })<CR>
 
 " buffer
 " :vert/tab sb
@@ -577,14 +577,6 @@ nnoremap <silent> <C-P> :lua require('telescope.builtin').oldfiles()<CR>
 
 " auto-complete filename
 inoremap <silent> <C-F> <C-X><C-F>
-
-nmap <M-f> %
-vmap <M-f> %
-" nmap <M-f> *
-" nmap <M-F> #
-
-" find cpp function WIP
-" nnoremap <M-/> ^\(internal\|static\)*\s*\(\w\|\*\)\+\s\+\(\w\|\*\)\+(.*)\_s*{
 
 " ---- EDITING
 " ctrl+backspace
@@ -670,27 +662,24 @@ endfunc
 nnoremap <Leader>r :call Replace()<CR>
 
 " ---- COMMANDS
-command! Init execute ':e C:\Users\xoxo\AppData\Local\nvim\init.vim'
+command! Init execute ':e ~\AppData\Local\nvim\init.vim'
 command! Source execute ':source $MYVIMRC'
 command! BufOnly execute '%bdelete | edit # | normal `"'
 command! Smol execute ":execute ':Vcvars' | execute ':e D:/programming/c_cpp/smol/main.cpp'"
 
 " -- SESSIONS
+let g:current_session = ''
 func! s:loadsession(name)
-    execute ':source D:\\Nvy\\'. a:name
+    let g:current_session = a:name
+    execute ':source E:\\dot\\nvim\\sessions\\'. a:name
 endfunc
 
 func! s:savesession(name)
-    execute ':mksession! D:\\Nvy\\'. a:name
+    execute ':mksession! E:\\dot\\nvim\\sessions\\'. a:name
 endfunc
 
 command! -nargs=1 SSave call s:savesession(<q-args>)
 command! -nargs=1 SLoad call s:loadsession(<q-args>)
-
-" ctrl+s saving
-noremap  <C-S> :update<CR>
-vnoremap <C-S> <C-C>:update<CR>
-inoremap <C-S> <Esc>:update<CR>gi
 
 " yank-paste system clipboard
 " TODO: do we even need P? if we don't,
@@ -714,13 +703,7 @@ inoremap <Leader>bb {{  }}<Left><Left><Left>
 " ---- BROKEN KEYBOARD MAPS D:
 nmap <silent> <M-v> <C-V>
 
-" we probably don't need <C-S> anymore, just use S
-nmap <silent> S <C-S>
-
-" vim completes me is kind of annoying sometimes
-" (require me to tap space twice), find fix or just use this
-" imap <silent> <M-n> <C-N>
-" imap <silent> <M-p> <C-P>
+nnoremap <silent> S :update<CR>
 
 " + is used quite a lot, so use <M-p> instead of <M-Q>, same with _
 imap <M-q> =
@@ -749,37 +732,3 @@ cmap <M-g> `
 cmap <M-G> ~
 
 inoremap <M-a> ->
-
-
-
-" SENT'S INIT.VIM MANIFESTO
-" 
-" 1. Screw the default vim keybindings. It's decent,
-"    but if you have a better keybinding, use it.
-" 2. Screw the "vim purists". You shouldn't restrict yourself with not
-"    being able to move in Insert mode just because "it's not the vim way".
-"    Do things that make you the most comfortable.
-" 3. Utilize Alt key. I use GUI so it shouldn't be a problem.
-" 4. Make it as minimal as possible. Only put something you *really* use.
-" 
-" KEYBINDING REWORK
-" hjkl      - move
-" wbe       - move
-" fFtT;,    - move
-" m         - mark
-" '`        - mark move
-" vV        - visual
-" /?nN      - search
-" qQ        - macro
-" yp        - yank/paste
-" .         - repeat
-" r         - replace
-" c         - change
-" d         - delete
-" <>        - indentation
-"
-" not used
-" s         - same as c
-" x         - same as d?
-" []()
-" U
