@@ -20,4 +20,12 @@ doskey flask-off = venv\Scripts\deactivate
 
 doskey ar = php artisan $*
 
+doskey gs = git status $*
+doskey gc = git commit $*
+doskey ga = git add $*
+doskey gco = git checkout $*
+doskey gd = git diff $*
+doskey gdc = git diff --cached $*
+doskey gl = git log --graph --pretty="tformat:%%C(always,yellow)%%h%%C(always,reset) %%C(always,green)%%ar%%C(always,reset) %%C(always,bold blue)%%an%%C(always,reset) %%C(always,red)%%d%%C(always,reset) %%s" $*
+
 doskey msc = E:\lambda\odin\msc\run\msc.exe
