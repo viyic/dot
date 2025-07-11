@@ -1,0 +1,92 @@
+// Place your key bindings in this file to override the defaults
+[
+    // Use built in VSCode pattern matcher for entire word search (ctrl + n)
+    {
+        "key": "ctrl+n",
+        "command": "editor.action.addSelectionToNextFindMatch",
+        "when": "vim.active && editorFocus && vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualBlock' && !inDebugRepl"
+    },
+    // Skip current match (ctrl + x)
+    {
+        "key": "ctrl+x",
+        "command": "editor.action.moveSelectionToNextFindMatch",
+        "when": "vim.active && editorFocus && vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualBlock' && !inDebugRepl"
+    },
+    // Go back to previous match (ctrl + p)
+    {
+        "key": "ctrl+p",
+        "command": "editor.action.moveSelectionToPreviousFindMatch",
+        "when": "vim.active && editorFocus && vim.mode == 'Visual' || vim.mode == 'VisualBlock' && !inDebugRepl"
+    },
+    // Select all matches (ctrl + a). This is effectively the same as (ctrl + shift + l)
+    {
+        "key": "ctrl+a",
+        "command": "editor.action.selectHighlights",
+        "when": "vim.active && editorFocus && vim.mode == 'Normal' || vim.mode == 'Visual' || vim.mode == 'VisualBlock' && !inDebugRepl"
+    },
+    {
+        "key": "alt+m",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "build\u000D"
+        }
+    },
+    {
+        "key": "alt+shift+m",
+        "command": "workbench.action.terminal.sendSequence",
+        "args": {
+            "text": "build game\u000D"
+        }
+    },
+    // i use open folder more than open file
+    {
+        "key": "ctrl+o",
+        "command": "workbench.action.files.openFolder"
+    },
+    {
+        "key": "ctrl+shift+o",
+        "command": "workbench.action.files.openFile"
+    },
+    {
+        "key": "ctrl+e",
+        "command": "workbench.view.explorer"
+    },
+    {
+        "key": "ctrl+g",
+        "command": "workbench.view.scm"
+    },
+    // {
+    //     "key": "ctrl+x",
+    //     "command": "workbench.view.extensions"
+    // },
+    {
+        "key": "alt+n",
+        // "command": "workbench.action.terminal.toggleTerminal"
+        "command": "workbench.action.togglePanel",
+    },
+    {
+        "key": "alt+shift+n",
+        "command": "workbench.action.terminal.focus"
+    },
+    {
+        "key": "alt+shift+n",
+        "command": "workbench.action.focusActiveEditorGroup",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "ctrl+h",
+        "command": "workbench.action.previousEditor",
+    },
+    {
+        "key": "ctrl+l",
+        "command": "workbench.action.nextEditor",
+    },
+    {
+        "key": "alt+s",
+        "command": "editor.emmet.action.wrapWithAbbreviation",
+    },
+    {
+        "key": "alt+c",
+        "command": "editor.emmet.action.updateTag",
+    },
+]
