@@ -7,5 +7,6 @@ config.default_cwd = 'E:\\'
 config.color_scheme = 'OneDark (base16)'
 config.font = wezterm.font 'Cascadia Mono'
 config.use_fancy_tab_bar = false
+config.enable_kitty_keyboard = true
 
 return config
